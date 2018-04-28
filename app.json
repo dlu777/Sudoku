@@ -1,5 +1,8 @@
 {
   "expo": {
     "sdkVersion": "26.0.0"
-  }
+  },
+  "facebookScheme": "fb161141271247906",
+  "facebookAppId": "161141271247906",
+  "facebookDisplayName": "Sudoku"
 }
