@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { StackNavigator } from 'react-navigation';
-import Home from './client/components/Home';
-import Game from './client/components/Game';
+import Home from './app/components/Home';
+import Game from './app/components/Game';
 
 const RootStack = StackNavigator({
   Home: {

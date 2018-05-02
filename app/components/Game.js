@@ -8,20 +8,40 @@ class Tile extends Component {
     this.y = props.index % 9;
   }
 
+  isRelated = () => {
+    // const {x, y, index} = this.props.selectedTile
+    // if(this.props.index === index) return false;
+    // if(this.x === x || this.y === y) return true;
+    // if(x <= 2 && y <= 2 && this.x <=2 && this.y <= 2) return true;
+    // if(x <= 2 && y >= 3 && y <= 5 && this.x <= 2 && this.y >= 3 && this.y <= 5) return true;
+    // if(x <= 2 && y >= 6 && this.x <=2 && this.y >= 6) return true;
+    // if(x >= 3 && x <= 5 && y <= 2 && this.x >= 3 && this.x <= 5 && this.y <= 2) return true;
+    // if(x >= 3 && x <= 5 && y >= 3 && y <= 5 && this.x >= 3 && this.x <= 5 && this.y >= 3 && this.y <= 5) return true;
+    // if(x >= 3 && x <= 5 && y >= 6 && this.x >= 3 && this.x <= 5 && this.y >= 6) return true;
+    // if(x >= 6 && y <= 2 && this.x >= 6 && this.y <= 2) return true;
+    // if(x >= 6 && y >= 3 && y <= 5 && this.x >= 6 && this.y >= 3 && this.y <= 5) return true;
+    // if(x >= 6 && y >= 6 && this.x >= 6 && this.y >= 6) return true;
+    return false;
+  }
+
+  isSameNumber = () => {
+    return this.props.selectedTile.number === this.props.tileObj.number;
+  }
+
   render() {
     // console.log('props', this.props)
-    const { tileObj, index, selectedIndex, onPressTile, checkAnswers} = this.props
+    const { tileObj, index, selectedTile, onPressTile, checkAnswers} = this.props
     return (
       tileObj.isSet ?
-        (<View style={styles.boxSet}>
-          <Text style={{fontWeight: 'bold'}}>{tileObj.number}</Text>
+        (<View style={this.isRelated() ? styles.boxSetRelated : styles.boxSet}>
+          <Text style={this.isSameNumber() ? {fontWeight: 'bold', color: 'yellow'} : {fontWeight: 'bold'}}>{tileObj.number}</Text>
         </View>) :
         (<TouchableHighlight onPress={event => onPressTile(event, index, this.x, this.y, tileObj.number)}>
-          {index === selectedIndex ?
+          {index === selectedTile.index ?
             (<View style={styles.boxHighlighted}>
               <Text style={checkAnswers && !tileObj.isCorrect ? {fontWeight: 'bold', color: 'red'} : {fontWeight: 'bold'}}>{tileObj.number}</Text>
             </View>) :
-            (<View style={styles.box}>
+            (<View style={this.isRelated() ? styles.boxRelated : styles.box}>
               <Text style={checkAnswers && !tileObj.isCorrect ? {color: 'red'} : {}}>{tileObj.number}</Text>
             </View>)}
         </TouchableHighlight>)
@@ -42,12 +62,40 @@ class AvailableTile extends Component {
   }
 }
 
+class Timer extends Component {
+  state = {count: 0}
+
+  componentDidMount() {
+    setInterval(() => {
+      this.setState({count: this.state.count + 1})
+    }, 1000)
+  }
+
+  render() {
+    const {count} = this.state;
+    const mins = Math.floor(count/60);
+    const secs = count % 60;
+    return (
+      <Text style={{fontSize: 20}}>
+        {mins}:{secs > 9 ? secs : '0' + secs}
+      </Text>
+    )
+  }
+}
+
 export default class Game extends Component {
+  static navigationOptions = {
+    headerRight: <Timer />
+  };
+
   constructor() {
     super();
     this.puzzleSolution = '864371259325849761971265843436192587198657432257483916689734125713528694542916378'.split('').map(num => +num);
     this.state = {
-      puzzle: '864371259325849761971265843436192587198657432257483916689734125713528694542916370'.split('').map((num, index) => ({
+      puzzle:
+      // '004300209005009001070060043006002087190007400050083000600000105003508690042910300'
+      '864371259325849761971265843436192587198657432257483916689734125713528694542916370'
+      .split('').map((num, index) => ({
         x: Math.floor(index / 9),
         y: index % 9,
         number: num === '0' ? '' : +num,
@@ -135,23 +183,23 @@ export default class Game extends Component {
     return (
       <View style={styles.container}>
         {puzzle.map((tileObj, idx) =>
-          <Tile key={idx} index={idx} selectedIndex={selectedTile.index} tileObj={tileObj} checkAnswers={checkAnswers} onPressTile={this._onPressTile} />
+          <Tile key={idx} index={idx} selectedTile={selectedTile} tileObj={tileObj} checkAnswers={checkAnswers} onPressTile={this._onPressTile} />
         )}
         {availableNumbers.map(num =>
           <AvailableTile key={num} number={num} onPressNumber={this._onPressNumber} />
         )}
-        <TouchableHighlight onPress={this._onPressDelete}>
+        <TouchableOpacity onPress={this._onPressDelete}>
           <View style={styles.deleteButton}>
             <Text adjustsFontSizeToFit={true} style={{fontSize:30}}>X</Text>
           </View>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={checkAnswers ? this._clearAnswers : this._checkAnswers}>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={checkAnswers ? this._clearAnswers : this._checkAnswers}>
           <View style={styles.checkAnswers}>
             {checkAnswers ?
               <Text adjustsFontSizeToFit={true} >Exit Check Mode</Text> :
               <Text adjustsFontSizeToFit={true} >Check Answers</Text>}
           </View>
-        </TouchableHighlight>
+        </TouchableOpacity>
         {this.state.isDone &&
           <View style={styles.message}>
             <Text adjustsFontSizeToFit={true} style={{fontSize:30}}>You Finished the Puzzle!</Text>
@@ -179,10 +227,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  boxSetRelated: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'bisque',
+    borderColor: 'black',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   box: {
     width: 40,
     height: 40,
     backgroundColor: 'lightcyan',
+    borderColor: 'black',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  boxRelated: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'bisque',
     borderColor: 'black',
     borderWidth: 2,
     justifyContent: 'center',
@@ -205,7 +271,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     borderColor: 'navy',
-    borderWidth: 2
+    borderWidth: 2,
+    marginVertical: 4
   },
   deleteButton: {
     width: 40,
@@ -215,7 +282,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     borderColor: 'navy',
-    borderWidth: 2
+    borderWidth: 2,
+    marginHorizontal: 4
   },
   checkAnswers: {
     height: 40,
@@ -224,7 +292,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     borderColor: 'navy',
-    borderWidth: 2
+    borderWidth: 2,
+    marginHorizontal: 4
   },
   message: {
     height: 60,
